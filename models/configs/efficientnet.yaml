@@ -1,0 +1,51 @@
+program_param:
+  project_name: simple-image-classification
+  save_dir: checkpoint
+  seed: -1
+  log_freq: 100
+
+data_param:
+  dir_path: /home/kbkim/Datasets
+  dataset_name: ImageNet-1K
+  train_csv: dataframes/train.csv
+  valid_csv: dataframes/valid.csv
+  test_csv: None
+  num_classes: 1000
+
+model_param:
+  model_name: efficientnet
+  device: cuda
+  scheduler: steplr
+  optimizer: sgd
+  state_dict_path: None
+  is_pretrained: False
+  version: b0
+
+train_param:
+  epochs: 40
+  batch_size: 256
+  num_workers: 12
+  crop_size: 224
+  max_size: [256,384]
+  lr: 1e-1
+  momentum: 0.9
+  step_size: 20
+  gamma: 0.1
+  min_lr: 1e-6
+  factor: 0.1
+  patience: 2
+  T_max: 500
+  T_0: 50
+  betas: [0.9, 0.999]
+  eps: 1e-8
+  weight_decay: 1e-4
+  loss_fn: cross_entropy
+  shuffle: True
+  pin_memory: True
+  drop_last: False
+
+valid_param:
+  batch_size: 256
+  shuffle: False
+  pin_memory: True
+  drop_last: False
