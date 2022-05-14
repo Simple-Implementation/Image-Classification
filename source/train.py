@@ -18,7 +18,7 @@ def one_epoch_training(dataloader, model, criterion, optimizer, scheduler, sched
     # 학습 모드로 전환
     model.train()
 
-    pbar = tqdm(dataloader, total=len(dataloader),desc=f"Training [{epoch}]")
+    pbar = tqdm(dataloader, total=len(dataloader),desc=f"{FONT['start']}{FONT['c']}{'Training':<11}[{epoch}]{FONT['end']}")
 
     for images, target in pbar:
 
@@ -69,7 +69,7 @@ def one_epoch_validating(dataloader, model, criterion, epoch, device):
     # 평가 모드로 전환
     model.eval()
 
-    pbar = tqdm(dataloader,total=len(dataloader),desc=f"{FONT['y']}Validating [{epoch}]{FONT['reset']}")
+    pbar = tqdm(dataloader,total=len(dataloader),desc=f"{FONT['start']}{FONT['y']}{'Validating':<11}[{epoch}]{FONT['reset']}")
 
     # 그래디언트가 흐르지 않게 함
     with torch.no_grad():

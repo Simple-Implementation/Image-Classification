@@ -8,8 +8,9 @@ import torch.optim as optim
 
 from colorama import Fore, Style
 from torch.optim import lr_scheduler
-from models.archs.resnet import ResNet50
 from models.archs.vggnet import VGGNet
+from models.archs.alexnet import AlexNet
+from models.archs.resnet import ResNet50
 from models.archs.efficientnet import EfficientNet
 
 # 터미널 출력 폰트 색
@@ -18,6 +19,8 @@ FONT = {
     "g": Fore.GREEN,
     "b": Fore.BLUE,
     "y": Fore.YELLOW,
+    "m": Fore.MAGENTA,
+    "c": Fore.CYAN,
     "start": '\033[1m',
     "end": '\033[0m',
     "reset": Style.RESET_ALL,
@@ -146,6 +149,10 @@ def fetch_model(cfg):
     elif cfg.model_param.model_name == 'efficientnet':
         model = EfficientNet(
             version=cfg.model_param.version,
+            num_classes=cfg.data_param.num_classes,
+    )
+    elif cfg.model_param.model_name == 'alexnet':
+        model = AlexNet(
             num_classes=cfg.data_param.num_classes,
     )
 

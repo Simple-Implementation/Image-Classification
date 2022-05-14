@@ -57,11 +57,11 @@ def run_training(
             elif cfg.model_param.scheduler == 'rlrp':
                 scheduler.step(valid_epoch_loss)
 
-        print(f'Top 1 Validation Accuracy Of Epoch {epoch}: {valid_acc1:.4f} (Best: {best_acc1:.4f})')
+        print(f'Validation Accuracy Of Epoch {epoch}: Top1: {valid_acc1:.4f}, Top5: {valid_acc5:.4f} (Best Top1: {best_acc1:.4f})')
         
         # 정확도 갱신
         if valid_acc1 > best_acc1:
-            print(f"{FONT['b']}Validation Accuracy Improved ({best_acc1:.4f} ---> {valid_acc1:.4f})")
+            print(f"{FONT['b']}Top 1 Validation Accuracy Improved ({best_acc1:.4f} ---> {valid_acc1:.4f})")
             best_acc1 = valid_acc1
             
             # 이전 베스트 모델 삭제
