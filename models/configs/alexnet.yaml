@@ -13,19 +13,18 @@ data_param:
   num_classes: 1000
 
 model_param:
-  model_name: vggnet
+  model_name: alexnet
   device: cuda
   scheduler: steplr
   optimizer: sgd
   state_dict_path: None
   is_pretrained: False
-  num_layers: 11 # [11,13,16,19]
 
 train_param:
   epochs: 40
   batch_size: 256
   num_workers: 12
-  crop_size: 224
+  crop_size: 227
   max_size: [256,384]
   lr: 1e-1
   momentum: 0.9
