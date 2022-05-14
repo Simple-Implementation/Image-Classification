@@ -1,0 +1,10 @@
+# 패키지 부산물
+*.egg-info
+*.json
+*.pyc
+
+# wandb 폴더
+wandb
+
+# 학습된 모델
+*.pt
