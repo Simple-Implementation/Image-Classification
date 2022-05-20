@@ -68,6 +68,7 @@ def initialize_weights(model):
             nn.init.constant_(module.bias, 0)
 
 def save_checkpoint(
+    run_id,
     model_path, 
     model, 
     optimizer, 
@@ -88,6 +89,7 @@ def save_checkpoint(
             'scheduler_state_dict': scheduler.state_dict(),
             'loss': loss,
             'acc@1': accuracy,
+            'run_id': run_id
     }
     
     torch.save(checkpoint, model_path)
@@ -124,9 +126,10 @@ def load_checkpoint(checkpoint_path, model, optimizer=None, scheduler=None):
     # 학습 정보 로드
     epoch = checkpoint['epoch']
     accuracy = checkpoint['acc@1']
+    run_id = checkpoint['run_id']
 
     # 학습 정보 반환
-    return epoch, accuracy
+    return epoch, accuracy, run_id
 
 
 def fetch_model(cfg):
@@ -273,7 +276,8 @@ def wandb_logging(
     valid_acc1,
     valid_acc5,
     end_time,
-    lr
+    lr,
+    memory
 ):
 
     """
@@ -288,6 +292,7 @@ def wandb_logging(
     wandb.log({"Valid Acc@5": valid_acc5})
     wandb.log({"One Epoch Train Time(min)": end_time})
     wandb.log({"Learning Rate": lr})
+    wandb.log({"GPU Memory Allocated(GB)": memory})
 
 class AverageMeter(object):
 
