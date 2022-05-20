@@ -5,7 +5,7 @@ import wandb
 import argparse
 
 from source.dataset import get_dataloader
-from models.configs.config_manager import ConfigManager
+from source.config_manager import ConfigManager
 from source.train import one_epoch_training, one_epoch_validating
 from source.utils import (
     FONT, fetch_model, fetch_loss_fn, fetch_optimizer, fetch_scheduler, 
@@ -72,6 +72,7 @@ def run_training(
                 best_file = f'{checkpoint_dir}/[{cfg.training_keyword.upper()}]_SCHEDULER_{cfg.model_param.scheduler.upper()}_EPOCH_{epoch}_ACC_{best_acc1:.4f}.pt'
                         
             save_checkpoint(
+                status["run_id"],
                 best_file, 
                 model, 
                 optimizer, 
@@ -92,7 +93,8 @@ def run_training(
             valid_acc1,
             valid_acc5,
             end_time,
-            optimizer.param_groups[0]['lr']
+            optimizer.param_groups[0]['lr'],
+            torch.cuda.max_memory_reserved()/1024**3,
         )
 
 def main(cfg):
@@ -103,6 +105,7 @@ def main(cfg):
     # 원격 WANDB 설정
     wandb.login(key=cfg.program_param.wandb_key)
     cfg.group = f'{cfg.program_param.project_name}/{cfg.model_param.model_name}'
+    run_id = wandb.util.generate_id()
 
     # 학습 파라미터 설정
     model = fetch_model(cfg)
@@ -128,6 +131,36 @@ def main(cfg):
     train_loader = get_dataloader(train_csv_path, cfg, mode='Train')
     valid_loader = get_dataloader(valid_csv_path, cfg, mode='Valid')
 
+    # 사용중인 GPU 이름 출력
+    if torch.cuda.is_available():
+        print(f"\n{FONT['g']}[INFO] Using GPU: {torch.cuda.get_device_name()}")
+
+    # 모델 메모리 출력
+    print(f"[INFO] Allocated Cuda Memory After Model Loading: {torch.cuda.max_memory_reserved()/1024**2:.3f}MB{FONT['reset']}")
+
+    status = {
+        'accuracy':0,
+        'epoch':0,
+        'run_id':run_id,
+    }
+
+    # 전이 학습
+    if cfg.model_param.is_pretrained:
+        model.pretrained(cfg.model_param.state_dict_path)
+
+    # 모델 이어 학습
+    elif 'load_path' in cfg:
+        print(f'{FONT["g"]}[INFO] Resume Training: {cfg.load_path.split("/")[-1]}{FONT["reset"]}')
+        epoch, accuracy, run_id = load_checkpoint(cfg.load_path, model, optimizer, scheduler)
+        status = {
+            'epoch':epoch,
+            'accuracy':accuracy,
+            'run_id':run_id,
+        }
+
+    # Run ID 출력
+    print(f"{FONT['g']}[INFO] WANDB Run ID: {run_id}{FONT['reset']}")
+
     # WANDB 기록 설정
     run = wandb.init(
         project=cfg.program_param.project_name,
@@ -139,33 +172,9 @@ def main(cfg):
             cfg.train_param.loss_fn
         ],
         name=cfg.training_keyword,
-        resume=args.resume
+        id=run_id,
+        resume="must" if args.resume else False
     )
-
-    # 사용중인 GPU 이름 출력
-    if torch.cuda.is_available():
-        print(f"\n{FONT['g']}[INFO] Using GPU: {torch.cuda.get_device_name()}")
-
-    # 모델 메모리 출력
-    print(f"[INFO] Allocated Cuda Memory For Model: {torch.cuda.memory_allocated()/1024**2:.3f}MB\n{FONT['reset']}")
-
-    status = {
-        'accuracy':0,
-        'epoch':0,
-    }
-
-    # 전이 학습
-    if cfg.model_param.is_pretrained:
-        model.pretrained(cfg.model_param.state_dict_path)
-
-    # 모델 이어 학습
-    elif 'load_path' in cfg:
-        print(f'{FONT["g"]}[RESUME] Loading Model: {cfg.load_path.split("/")[-1]}\n{FONT["reset"]}')
-        epoch, accuracy = load_checkpoint(cfg.load_path, model, optimizer, scheduler)
-        status = {
-            'epoch':epoch,
-            'accuracy':accuracy,
-        }
 
     # 학습 진행
     run_training(
