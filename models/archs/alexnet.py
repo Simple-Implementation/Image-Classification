@@ -7,13 +7,15 @@ class ConvBlock(nn.Module):
         Local Response Norm을 포함하는 Conv. 블록입니다.
     '''
 
-    def __init__(self,
-                 in_channels,
-                 out_channels,
-                 kernel_size,
-                 stride,
-                 padding,
-                 use_pool):
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride,
+        padding,
+        use_pool
+    ):
         
         super().__init__()
 

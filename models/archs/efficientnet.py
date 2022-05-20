@@ -41,14 +41,15 @@ class ConvBlock(nn.Module):
         Group Seperable Conv.와 Swish를 사용하는 Conv. 블록입니다.
     '''
 
-    def __init__(self,
-                 in_channels,
-                 out_channels,
-                 kernel_size,
-                 stride,
-                 padding,
-                 groups=1,
-                 ):
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride,
+        padding,
+        groups=1,
+    ):
         
         super().__init__()
         self.cnn = nn.Conv2d(
@@ -77,9 +78,7 @@ class SqueezeExcitation(nn.Module):
         채널에서의 attention 메커니즘입니다.
     '''
 
-    def __init__(self,
-                 in_channels,
-                 reduced_dim):
+    def __init__(self,in_channels,reduced_dim):
 
         super().__init__()
 
@@ -103,16 +102,17 @@ class InvertedResidualBlock(nn.Module):
         Residual Block의 중간 레이어의 채널을 확장시킨 블록입니다.
     '''
 
-    def __init__(self,
-                 in_channels,
-                 out_channels,
-                 kernel_size,
-                 stride,
-                 padding,
-                 expand_ratio, # depthwise conv로 입력 채널을 더 많은 채널로 확장시킴
-                 reduction = 4, # Squeeze Excitation의 reduced_dim; 들어오는 것의 1/4로 줄임
-                 survival_prob = 0.8, # stochastic depth
-                 ):
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride,
+        padding,
+        expand_ratio, # depthwise conv로 입력 채널을 더 많은 채널로 확장시킴
+        reduction = 4, # Squeeze Excitation의 reduced_dim; 들어오는 것의 1/4로 줄임
+        survival_prob = 0.8, # stochastic depth
+    ):
         
         super().__init__()
         self.survival_prob = survival_prob
@@ -181,9 +181,7 @@ class InvertedResidualBlock(nn.Module):
 
 class EfficientNet(nn.Module):
 
-    def __init__(self,
-                 version,
-                 num_classes):
+    def __init__(self,version,num_classes):
         
         super().__init__()
         width_factor, depth_factor, dropout_rate = self.calculate_factors(version)
@@ -197,11 +195,12 @@ class EfficientNet(nn.Module):
             nn.Linear(last_channels,num_classes),
         )
 
-    def calculate_factors(self,
-                          version,
-                          alpha=1.2, # depth scaling; layer를 얼마나 더 늘릴지
-                          beta=1.1, # width scaling; 채널을 얼마나 더 늘릴지
-                          ):
+    def calculate_factors(
+        self,
+        version,
+        alpha=1.2, # depth scaling; layer를 얼마나 더 늘릴지
+        beta=1.1, # width scaling; 채널을 얼마나 더 늘릴지
+    ):
         phi, resolution, drop_rate = phi_values[version]
         depth_factor = alpha ** phi
         width_factor = beta ** phi
@@ -209,6 +208,7 @@ class EfficientNet(nn.Module):
         return width_factor,depth_factor,drop_rate
 
     def create_features(self,width_factor,depth_factor,last_channels):
+
         channels = int(32*width_factor) # Stage 1의 시작 채널: 32
         features = [ConvBlock(3,channels,3,stride=2,padding=1)]
         in_channels = channels
@@ -233,11 +233,13 @@ class EfficientNet(nn.Module):
                 in_channels = out_channels
 
         features.append(
-            ConvBlock(in_channels,
-                     last_channels,
-                     kernel_size=1,
-                     stride=1,
-                     padding=0)
+            ConvBlock(
+                in_channels,
+                last_channels,
+                kernel_size=1,
+                stride=1,
+                padding=0
+            )
         )
 
         return nn.Sequential(*features)
