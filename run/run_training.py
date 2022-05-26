@@ -70,6 +70,7 @@ def run_training(
                 best_files = [f'{checkpoint_dir}/[{cfg.training_keyword.upper()}]_SCHEDULER_{cfg.model_param.scheduler.upper()}_EPOCH_{epoch}_ACC_{best_acc1:.4f}.pt']
             else:
                 # 베스트 모델 집계
+                # 매번 집계해야 Resume 시에도 베스트 모델들을 집계할 수 있음
                 best_files = [
                     file for file in glob(f'{checkpoint_dir}/*') 
                     if file.startswith(f'{checkpoint_dir}/[{cfg.training_keyword.upper()}]_SCHEDULER_{cfg.model_param.scheduler.upper()}_EPOCH_')
