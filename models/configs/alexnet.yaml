@@ -15,16 +15,16 @@ data_param:
 model_param:
   model_name: alexnet
   device: cuda
-  scheduler: steplr
+  scheduler: rlrp
   optimizer: sgd
   state_dict_path: None
   is_pretrained: False
+  image_size: 227
 
 train_param:
-  epochs: 40
+  epochs: 61
   batch_size: 256
   num_workers: 12
-  crop_size: 227
   max_size: [256,384]
   lr: 1e-1
   momentum: 0.9
