@@ -4,6 +4,7 @@ import torch
 import wandb
 import argparse
 
+from glob import glob
 from source.dataset import get_dataloader
 from source.config_manager import ConfigManager
 from source.train import one_epoch_training, one_epoch_validating
@@ -36,7 +37,7 @@ def run_training(
 
     # 파라미터 초기화
     best_acc1 = status['accuracy']
-    best_file = None if 'load_path' not in cfg else cfg.load_path 
+    best_files = None if 'load_path' not in cfg else [cfg.load_path] 
     start_epoch = status['epoch'] + 1
     end_epoch = cfg.train_param.epochs+1 if status==None else start_epoch+cfg.train_param.epochs
 
@@ -65,15 +66,23 @@ def run_training(
             best_acc1 = valid_acc1
             
             # 이전 베스트 모델 삭제
-            if best_file is None:
-                best_file = f'{checkpoint_dir}/[{cfg.training_keyword.upper()}]_SCHEDULER_{cfg.model_param.scheduler.upper()}_EPOCH_{epoch}_ACC_{best_acc1:.4f}.pt'
+            if best_files is None:
+                best_files = [f'{checkpoint_dir}/[{cfg.training_keyword.upper()}]_SCHEDULER_{cfg.model_param.scheduler.upper()}_EPOCH_{epoch}_ACC_{best_acc1:.4f}.pt']
             else:
-                os.remove(best_file)
-                best_file = f'{checkpoint_dir}/[{cfg.training_keyword.upper()}]_SCHEDULER_{cfg.model_param.scheduler.upper()}_EPOCH_{epoch}_ACC_{best_acc1:.4f}.pt'
+                # 베스트 모델 집계
+                best_files = [
+                    file for file in glob(f'{checkpoint_dir}/*') 
+                    if file.startswith(f'{checkpoint_dir}/[{cfg.training_keyword.upper()}]_SCHEDULER_{cfg.model_param.scheduler.upper()}_EPOCH_')
+                ]
+                # 베스트 모델 정렬
+                best_files = sorted(best_files,key=lambda x: float(x.split("_")[-1][:-3]))
+                if len(best_files) >= cfg.num_of_weights:
+                    os.remove(best_files[0])
+                best_files += [f'{checkpoint_dir}/[{cfg.training_keyword.upper()}]_SCHEDULER_{cfg.model_param.scheduler.upper()}_EPOCH_{epoch}_ACC_{best_acc1:.4f}.pt']
                         
             save_checkpoint(
                 status["run_id"],
-                best_file, 
+                best_files[-1], 
                 model, 
                 optimizer, 
                 scheduler, 
@@ -198,6 +207,7 @@ if __name__ == "__main__":
     parser.add_argument("--config-file",type=str,required=True,help="Type Configurate File Name.")
     parser.add_argument("--wandb-key", type=str, required=True,help="Type WANDB Key For Logs.")
     parser.add_argument("--training-keyword", type=str, required=True,help="Type Keyword Of This Training.")
+    parser.add_argument("--number-of-weights", type=int, default=3,help="Type The Number Of Weights To Keep.")
     parser.add_argument("--resume",action='store_true',default=False,help="Toggle If You Want To Resume Train.")
     parser.add_argument("--load-path", type=str, help="Type Path To Checkpoint File.")
 

@@ -14,6 +14,7 @@ class ConfigManager(object):
         self.cfg = munch.munchify(self.cfg)
         self.cfg.training_keyword = args.training_keyword
         self.cfg.program_param['wandb_key'] = args.wandb_key
+        self.cfg.num_of_weights = args.number_of_weights
         if args.resume:
             self.cfg.load_path = args.load_path
         
