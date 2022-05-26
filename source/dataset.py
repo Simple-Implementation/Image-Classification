@@ -88,7 +88,7 @@ def get_dataloader(csv_path, cfg, mode='Train'):
         cfg.data_param.dir_path, 
         is_target, 
         cfg.train_param.max_size,
-        cfg.train_param.crop_size,
+        crop_size=cfg.model_param.image_size,
     )
     
     dataloader = DataLoader(
