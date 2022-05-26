@@ -1,3 +1,4 @@
+from curses import window
 import os
 import torch
 import wandb
@@ -11,7 +12,10 @@ from torch.optim import lr_scheduler
 from models.archs.vggnet import VGGNet
 from models.archs.alexnet import AlexNet
 from models.archs.resnet import ResNet50
+from models.archs.convnext import ConvNeXt
 from models.archs.efficientnet import EfficientNet
+from models.archs.swin_transformer import SwinTransformer
+from models.archs.vision_transformer import VisionTransformer
 
 # 터미널 출력 폰트 색
 FONT = {
@@ -62,10 +66,12 @@ def initialize_weights(model):
                 nn.init.constant_(module.bias, 0)
         elif isinstance(module, nn.BatchNorm2d):
             nn.init.constant_(module.weight, 1)
-            nn.init.constant_(module.bias, 0)
+            if module.bias is not None:
+                nn.init.constant_(module.bias, 0)
         elif isinstance(module, nn.Linear):
             nn.init.normal_(module.weight, 0, 0.01)
-            nn.init.constant_(module.bias, 0)
+            if module.bias is not None:
+                nn.init.constant_(module.bias, 0)
 
 def save_checkpoint(
     run_id,
@@ -131,7 +137,6 @@ def load_checkpoint(checkpoint_path, model, optimizer=None, scheduler=None):
     # 학습 정보 반환
     return epoch, accuracy, run_id
 
-
 def fetch_model(cfg):
 
     '''
@@ -158,12 +163,42 @@ def fetch_model(cfg):
         model = AlexNet(
             num_classes=cfg.data_param.num_classes,
     )
+    elif cfg.model_param.model_name == 'vit':
+        model = VisionTransformer(
+            image_size=cfg.model_param.image_size,
+            patch_size=cfg.model_param.patch_size,
+            num_layers=cfg.model_param.num_layers,
+            num_heads=cfg.model_param.num_heads,
+            hidden_dim=cfg.model_param.hidden_dim,
+            mlp_dim=cfg.model_param.hidden_dim,
+            dropout=cfg.model_param.dropout,
+            attention_dropout=cfg.model_param.attention_dropout,
+            num_classes=cfg.data_param.num_classes
+    )
+    elif cfg.model_param.model_name == 'swin_small':
+        model = SwinTransformer(
+            patch_size=cfg.model_param.patch_size,
+            embed_dim=cfg.model_param.hidden_dim,
+            depths=cfg.model_param.depths,
+            num_heads=cfg.model_param.num_heads,
+            window_size=cfg.model_param.window_size,
+            stochastic_depth_prob=cfg.model_param.stochastic_depth_prob,
+            num_classes=cfg.data_param.num_classes
+        )
+    elif cfg.model_param.model_name == 'convnext':
+        model = ConvNeXt(
+            num_classes=cfg.data_param.num_classes, 
+            depths=cfg.model_param.depths, 
+            dims=cfg.model_param.dims, 
+            drop_path_rate=cfg.train_param.drop_path, 
+            layer_scale_init_value=float(cfg.train_param.layer_scale_init_value), 
+            head_init_scale=float(cfg.train_param.head_init_scale),
+        )
 
     # 모델 가중치 초기화    
     initialize_weights(model)
 
     return model.to(cfg.model_param.device)
-
 
 def fetch_loss_fn(cfg):
 
@@ -175,7 +210,6 @@ def fetch_loss_fn(cfg):
         loss_fn = nn.CrossEntropyLoss()
     
     return loss_fn.to(cfg.model_param.device)
-
 
 def fetch_scheduler(optimizer, cfg):
 
@@ -206,7 +240,6 @@ def fetch_scheduler(optimizer, cfg):
         scheduler = None
 
     return scheduler
-
 
 def fetch_optimizer(model, cfg):
 
